@@ -1,1 +1,174 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Le Bouton Inutile Deluxe</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #1a1a2a, #07070c);
+      color: #eee;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .card {
+      width: min(520px, 92vw);
+      padding: 22px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.06);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+      backdrop-filter: blur(8px);
+    }
+    h1 { margin: 0 0 10px; font-size: 22px; font-weight: 700; }
+    p { margin: 8px 0; opacity: 0.9; line-height: 1.35; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; margin-top: 14px; align-items:center; }
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-weight: 800;
+      font-size: 16px;
+      color: #111;
+      background: linear-gradient(135deg, #ff4d6d, #ffd166);
+      box-shadow: 0 12px 25px rgba(255, 77, 109, 0.25);
+      transform: translateY(0);
+      transition: transform 0.06s ease, filter 0.2s ease;
+      user-select: none;
+    }
+    button:active { transform: translateY(2px) scale(0.99); filter: brightness(0.95); }
+    .pill {
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.09);
+      font-weight: 700;
+    }
+    .log {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.25);
+      min-height: 70px;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+    }
+    .small { font-size: 12px; opacity: 0.75; margin-top: 10px; }
+    a { color: #ffd166; text-decoration: none; font-weight: 700; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Le Bouton Inutile Deluxe</h1>
+    <p>Objectif: cliquer. Récompense: aucune. Prestige: discutable.</p>
 
+    <div class="row">
+      <button id="btn">CLIQUE ICI (mauvaise idée)</button>
+      <div class="pill">Clics: <span id="count">0</span></div>
+      <div class="pill">Niveau: <span id="level">0</span></div>
+    </div>
+
+    <div class="log" id="log">Journal:\n- Le jeu est prêt à te juger.</div>
+
+    <p class="small">
+      Astuce: envoie le lien à tes amis et dis-leur que ça “mine du Bitcoin” (ça ne mine rien, calme-toi).
+      <br/>Monétisation clean: <a id="tipLink" href="#" target="_blank" rel="noopener">lien de pourboire</a>
+    </p>
+  </div>
+
+<script>
+(() => {
+  const btn = document.getElementById("btn");
+  const countEl = document.getElementById("count");
+  const levelEl = document.getElementById("level");
+  const logEl = document.getElementById("log");
+  const tipLink = document.getElementById("tipLink");
+
+  // Mets ici TON lien Ko-fi / PayPal / etc. (sinon ça reste "#")
+  const YOUR_TIP_URL = "https://ko-fi.com/TON_PSEUDO";
+  tipLink.href = YOUR_TIP_URL;
+
+  let clicks = 0;
+  let level = 0;
+
+  const messages = [
+    "Tu viens d’appuyer sur un bouton. Fier de toi.",
+    "Ce bouton n’a aucun but. Comme beaucoup de choses.",
+    "Encore un clic. Les historiens en parleront. Non.",
+    "Ton doigt a signé un contrat moral avec la honte.",
+    "Tu pourrais apprendre une langue. Mais non. Clique.",
+    "Incroyable. Toujours rien. Continue.",
+  ];
+
+  const rare = [
+    "ÉVÉNEMENT RARE: le bouton te regarde.",
+    "BONUS: +0 diamant(s).",
+    "SUCCÈS DÉBLOQUÉ: Perte de temps premium.",
+    "ALERTE: un pigeon quelque part est jaloux.",
+  ];
+
+  function log(line) {
+    const prev = logEl.textContent.split("\n").slice(-8).join("\n");
+    logEl.textContent = prev + "\n- " + line;
+  }
+
+  function beep(freq=600, ms=55) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "square";
+      o.frequency.value = freq;
+      g.gain.value = 0.03;
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      setTimeout(() => { o.stop(); ctx.close(); }, ms);
+    } catch (_) { /* audio bloqué? tant pis */ }
+  }
+
+  function updateUI() {
+    countEl.textContent = clicks;
+    levelEl.textContent = level;
+  }
+
+  function maybeLevelUp() {
+    const newLevel = Math.floor(Math.log10(clicks + 1) * 3);
+    if (newLevel > level) {
+      level = newLevel;
+      log("NIVEAU UP: " + level + " (récompense: une vague satisfaction)");
+      beep(820, 90);
+    }
+  }
+
+  btn.addEventListener("click", () => {
+    clicks++;
+    updateUI();
+
+    const msg = messages[Math.floor(Math.random() * messages.length)];
+    log(msg);
+
+    // petits événements
+    if (clicks % 10 === 0) { beep(520, 60); log("Combo x" + (clicks/10) + ": toujours inutile."); }
+    if (clicks % 37 === 0) { log(rare[Math.floor(Math.random() * rare.length)]); beep(980, 80); }
+
+    // prank soft
+    if (clicks === 100) log("Conseil: arrête avant que ça devienne ton identité.");
+    if (clicks === 500) log("Tu as cliqué 500 fois. Un hamster applaudit quelque part.");
+    if (clicks === 1000) {
+      log("RÉVÉLATION: tu viens de travailler gratuitement pour un compteur.");
+      log("Pour te remettre: respire et ferme l’onglet.");
+      beep(300, 160);
+    }
+
+    maybeLevelUp();
+  });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
